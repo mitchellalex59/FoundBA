@@ -1,0 +1,156 @@
+---
+title: "Predicting Retail Sales with Linear Regression"
+author: "Alex Mitchell"
+date: today
+format: 
+  revealjs:
+    self-contained: true
+    theme: solarized
+    toc: true
+    toc-title: "Table of Contents"
+execute:
+  echo: false
+---
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+
+
+df = pd.read_csv('retail_store_inventory.csv')
+```
+# Project Overview
+
+- Cleaned and prepared 700,000+ rows of retail sales data
+- Performed Exploratory Data Analysis (EDA)
+- Built a predictive model to forecast Units Sold
+- Evaluated model performance using MSE and R²
+- Analyzed feature importance for business insights
+
+# Data Set 
+- retail_store_inventory.csv from Kaggle
+
+```{python}
+df.info()
+```
+
+
+# Data Cleaning
+
+- Dropped columns with low predictive value:
+  - `Discount`
+  - `Holiday/Promotion`
+- Focused on features with strong correlation:
+  - `Inventory Level`
+  - `Demand Forecast`
+  - `Price`
+- Applied StandardScaler for numerical features
+
+# Exploratory Data Analysis (EDA)
+
+Explored key relationships and trends in the dataset:
+
+- Identified strong positive correlation between `Inventory Level` and `Units Sold`
+- Observed moderate positive relationship between `Demand Forecast` and `Units Sold`
+- Confirmed `Price` has a slight negative correlation with `Units Sold`
+
+# EDA (continued)
+```{python}
+plt.figure(figsize=(8, 5))
+sns.heatmap(df.select_dtypes(include=['number']).corr(), annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Heatmap')
+plt.show()
+```
+
+# EDA Histograms
+
+```{python}
+df.hist(bins=30, figsize=(10, 5))
+plt.tight_layout()
+plt.show()
+```
+
+# Predictive Modeling
+
+Developed a model to forecast Units Sold:
+
+- Selected `Inventory Level`, `Demand Forecast`, and `Price` as predictors
+- Split dataset into **training** (80%) and **testing** (20%) sets
+- Built a **Linear Regression** model
+- Evaluated model using **Mean Squared Error (MSE)** and **R² score**
+
+# Model Evaluation
+
+Assessed model performance using key metrics:
+
+```{python}
+
+X = df[['Inventory Level', 'Demand Forecast', 'Price']].values  
+y = df['Units Sold'].values
+
+```
+
+```{python}
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+```
+
+```{python}
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+```
+
+```{python}
+model = LinearRegression().fit(X_train, y_train)
+```
+
+```{python}
+y_train_pred = model.predict(X_train)
+train_mse = mean_squared_error(y_train, y_train_pred)
+train_r2 = r2_score(y_train, y_train_pred)
+```
+
+```{python}
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+```
+
+```{python}
+print("Coefficients (Slopes):", model.coef_)  
+print("Intercept:", model.intercept_)
+print("Training Mean Squared Error (MSE):", train_mse)
+print("Training R-squared (R²):", train_r2)
+print("Testing Mean Squared Error (MSE):", mse)
+print("Testing R-squared (R²):", r2)
+```
+
+- R-squared score indicates good accuracy
+
+# Linear Regression
+
+```{python}
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred, color="blue", alpha=0.5, label="Predictions")
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color="red", linewidth=2, label="Perfect Fit Line")
+plt.title("Linear Regression: Actual vs Predicted Units Sold")
+plt.xlabel("Actual Units Sold")
+plt.ylabel("Predicted Units Sold")
+plt.legend()
+plt.show()
+
+```
+
+# Conclusion
+Key takeaways from the analysis:
+
+- **Inventory Level** and **Demand Forecast** are strong drivers of Units Sold
+- The model achieved a **high predictive accuracy** (R² ≈ 0.994)
